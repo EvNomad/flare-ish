@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  provider: one
+  dow: 1
+  start_local: 2025-08-18 16:26:43
+  end_local: 2025-08-18 16:26:43
+
+two:
+  provider: two
+  dow: 1
+  start_local: 2025-08-18 16:26:43
+  end_local: 2025-08-18 16:26:43

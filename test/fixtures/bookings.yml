@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  provider: one
+  time_slot: one
+  client: one
+  status: MyString
+  hold_expires_at: 2025-08-18 17:59:30
+
+two:
+  provider: two
+  time_slot: two
+  client: two
+  status: MyString
+  hold_expires_at: 2025-08-18 17:59:30

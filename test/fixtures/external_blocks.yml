@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  provider: one
+  source: MyString
+  external_event_id: MyString
+  start_utc: 2025-08-18 16:33:15
+  end_utc: 2025-08-18 16:33:15
+
+two:
+  provider: two
+  source: MyString
+  external_event_id: MyString
+  start_utc: 2025-08-18 16:33:15
+  end_utc: 2025-08-18 16:33:15
