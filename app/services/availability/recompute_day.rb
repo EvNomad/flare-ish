@@ -22,7 +22,7 @@ module Availability
       @redis       = REDIS
     end
 
-    def call      
+    def call
       time_slots = load_time_slots_for_date
       candidate_ids = get_candidate_slot_ids(time_slots)
       blocked_ids = get_blocked_slot_ids(time_slots)
@@ -133,21 +133,14 @@ module Availability
       return [] if time_slots.empty?
 
       # Convert local date to the provider's timezone first, then to UTC
-      day_start_local = @local_date.to_time.in_time_zone(@tz).beginning_of_day
+      day_start_local = @local_date.in_time_zone(@tz).beginning_of_day
       day_end_local = day_start_local + 24.hours
       day_start_utc = day_start_local.utc
       day_end_utc = day_end_local.utc
 
-      # Debug: let's see what we're actually querying
-      Rails.logger.debug "Querying external blocks for provider #{@provider_id}"
-      Rails.logger.debug "Day boundaries: #{day_start_utc} to #{day_end_utc}"
-      Rails.logger.debug "Local date: #{@local_date}, TZ: #{@tz}"
-
       external_blocks = ExternalBlock
                           .where(provider_id: @provider_id)
                           .where("start_utc < ? AND end_utc > ?", day_end_utc, day_start_utc)
-
-      Rails.logger.debug "Found #{external_blocks.count} external blocks"
 
       return [] if external_blocks.blank?
 
@@ -164,24 +157,27 @@ module Availability
     def get_live_booking_slot_ids(time_slots)      
       ids_for_day = time_slots.map { |ts| ts[:id] }
       return [] if ids_for_day.empty?
-      Booking
+      
+      ProviderTimeSlot
+        .joins(:bookings)
         .where(provider_id: @provider_id, time_slot_id: ids_for_day)
-        .where(status: %w[held submitted accepted])
+        .where(bookings: { status: %w[held submitted accepted] })
         .distinct
         .pluck(:time_slot_id)
     end
 
     def get_booking_states(candidate_ids)
-      bookings = Booking
-                   .where(provider_id: @provider_id, time_slot_id: candidate_ids)
-                   .where(status: %w[held submitted accepted])
+      provider_time_slots = ProviderTimeSlot
+                              .joins(:bookings)
+                              .where(provider_id: @provider_id, time_slot_id: candidate_ids)
+                              .where(bookings: { status: %w[held submitted accepted] })
 
-      bookings.each_with_object({}) do |booking, states|
-        case booking.status
+      provider_time_slots.each_with_object({}) do |pts, states|
+        case pts.bookings.first.status
         when 'accepted'
-          states[booking.time_slot_id] = 'booked'
+          states[pts.time_slot_id] = 'booked'
         when 'held', 'submitted'
-          states[booking.time_slot_id] = 'held' unless states[booking.time_slot_id] == 'booked'
+          states[pts.time_slot_id] = 'held' unless states[pts.time_slot_id] == 'booked'
         end
       end
     end

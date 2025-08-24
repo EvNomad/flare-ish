@@ -3,7 +3,8 @@ class ProviderTimeSlotSerializer
 
   def as_json(*)
     {
-      time_slot_id: @r[:time_slot_id] || @r[:id],
+      id: @r[:id],
+      time_slot_id: @r[:time_slot_id],
       state: @r[:state],
       source: @r[:source],
       local_date: @r[:local_date],

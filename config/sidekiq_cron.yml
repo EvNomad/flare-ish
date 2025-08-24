@@ -1,0 +1,4 @@
+cleanup_expired_holds:
+  cron: "*/5 * * * *"  # Every 5 minutes
+  class: "CleanupExpiredHoldsJob"
+  queue: default

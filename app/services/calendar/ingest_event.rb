@@ -19,7 +19,6 @@ module Calendar
     end
 
     def call
-      debugger
       provider = Provider.find(@payload[:provider_id])
       event_id = @payload[:event_id].presence
       status   = (@payload[:status] || "").to_s.downcase
@@ -28,7 +27,8 @@ module Calendar
       start_utc = parse_time_utc(@payload[:start_utc])
       end_utc   = parse_time_utc(@payload[:end_utc])
 
-      if event_id && (booking = Booking.find_by(provider_id: provider.id, external_event_id: event_id))
+      # FIXED: Find booking through provider_time_slot relationship
+      if event_id && (booking = find_booking_by_external_event(provider, event_id))
         process_booking_update!(booking, status, start_utc, end_utc)
         recompute_span_for!(provider, start_utc, end_utc)
         return { processed: :booking, booking_id: booking.id }
@@ -42,11 +42,19 @@ module Calendar
 
     private
 
+    def find_booking_by_external_event(provider, external_event_id)
+      ProviderTimeSlot
+        .joins(:bookings)
+        .where(provider_id: provider.id)
+        .where(bookings: { external_event_id: external_event_id })
+        .first&.bookings&.first
+    end
+
     def process_booking_update!(booking, external_status, start_utc, end_utc)
       desired_status = map_external_status(external_status)
 
       # Optionally handle reschedules when start time moved
-      if start_utc && booking.time_slot_id
+      if start_utc && booking.provider_time_slot&.time_slot_id
         maybe_move_booking_time_slot!(booking, start_utc)
       end
 
@@ -58,18 +66,24 @@ module Calendar
     end
 
     def maybe_move_booking_time_slot!(booking, new_start_utc)
-      provider = Provider.find(booking.provider_id)
+      # Get provider through the provider_time_slot relationship
+      provider = booking.provider_time_slot.provider
+      
+      # Find the new time slot based on start_utc
       new_slot = TimeSlot.where(tz: provider.tz, start_utc: new_start_utc).limit(1).first
       return unless new_slot
 
-      # Ensure the destination slot is not blocked/held/booked
-      pts_state = ProviderTimeSlot
-                    .where(provider_id: provider.id, time_slot_id: new_slot.id)
-                    .pluck(:state)
-                    .first
-      return if %w[blocked held booked].include?(pts_state)
+      # Find existing provider time slot for the new time slot
+      new_provider_time_slot = ProviderTimeSlot.find_by(
+        provider_id: provider.id,
+        time_slot_id: new_slot.id
+      )
+      
+      # Only proceed if the provider time slot exists and is available
+      return unless new_provider_time_slot&.state == 'open'
 
-      booking.update!(time_slot_id: new_slot.id)
+      # Update the booking to use the new provider time slot
+      booking.update!(provider_time_slot_id: new_provider_time_slot.id)
     end
 
     def upsert_external_block!(provider, event_id, status, start_utc, end_utc, deleted)

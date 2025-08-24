@@ -15,7 +15,6 @@ module TimeSlots
     end
 
     def call
-      debugger
       # 1) Check cache
       cache_key = "tz:#{@tz}"
       blob = @redis.get(cache_key)

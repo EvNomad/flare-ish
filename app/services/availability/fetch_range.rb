@@ -73,20 +73,22 @@ module Availability
         .where(time_slots: { local_date: from_date..to_date })
         .order("time_slots.start_utc ASC")
         .pluck(
-          "time_slots.local_date",
-          "provider_time_slots.time_slot_id",
-          "provider_time_slots.state",
-          "provider_time_slots.source",
-          "time_slots.local_time",
-          "time_slots.start_utc",
-          "time_slots.end_utc"
+          "time_slots.local_date",            
+          "provider_time_slots.id",           
+          "provider_time_slots.time_slot_id", 
+          "provider_time_slots.state",       
+          "provider_time_slots.source",      
+          "time_slots.local_time",           
+          "time_slots.start_utc",           
+          "time_slots.end_utc"               
         )
 
       grouped = rows.group_by { |local_date, *_| local_date }
 
       grouped.transform_values do |group|
-        group.map do |local_date, time_slot_id, state, source, local_time, start_utc, end_utc|
+        group.map do |local_date, id, time_slot_id, state, source, local_time, start_utc, end_utc|
           ProviderTimeSlotSerializer.new(
+            id: id,
             time_slot_id: time_slot_id,
             state: state,
             source: source,

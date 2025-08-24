@@ -10,13 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_20_120500) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_23_140326) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "accounts", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "password_digest", null: false
+    t.integer "role", null: false
+    t.bigint "client_id"
+    t.bigint "provider_id"
+    t.datetime "jti_valid_after"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_accounts_on_client_id"
+    t.index ["email"], name: "index_accounts_on_email", unique: true
+    t.index ["provider_id"], name: "index_accounts_on_provider_id"
+  end
+
   create_table "bookings", force: :cascade do |t|
-    t.bigint "provider_id", null: false
-    t.string "time_slot_id", null: false
     t.bigint "client_id", null: false
     t.string "status", default: "held", null: false
     t.datetime "hold_expires_at"
@@ -25,12 +37,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_20_120500) do
     t.string "external_event_id"
     t.string "external_calendar_source"
     t.string "external_calendar_status"
+    t.bigint "provider_time_slot_id", null: false
     t.index ["client_id"], name: "index_bookings_on_client_id"
-    t.index ["provider_id", "external_event_id"], name: "index_bookings_on_provider_id_and_external_event_id", unique: true, where: "(external_event_id IS NOT NULL)"
-    t.index ["provider_id", "time_slot_id", "status"], name: "idx_unique_active_booking", unique: true, where: "((status)::text = ANY ((ARRAY['held'::character varying, 'submitted'::character varying, 'accepted'::character varying])::text[]))"
-    t.index ["provider_id", "time_slot_id"], name: "index_bookings_on_provider_id_and_time_slot_id"
-    t.index ["provider_id"], name: "index_bookings_on_provider_id"
-    t.index ["time_slot_id"], name: "index_bookings_on_time_slot_id"
+    t.index ["provider_time_slot_id"], name: "index_bookings_on_provider_time_slot_id"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -102,9 +111,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_20_120500) do
     t.index ["provider_id"], name: "index_weekly_templates_on_provider_id"
   end
 
+  add_foreign_key "accounts", "clients"
+  add_foreign_key "accounts", "providers"
   add_foreign_key "bookings", "clients"
-  add_foreign_key "bookings", "providers"
-  add_foreign_key "bookings", "time_slots"
+  add_foreign_key "bookings", "provider_time_slots"
   add_foreign_key "external_blocks", "providers"
   add_foreign_key "provider_time_slots", "providers"
   add_foreign_key "provider_time_slots", "time_slots"

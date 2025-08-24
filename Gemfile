@@ -37,6 +37,10 @@ gem "thruster", require: false
 
 gem "redis"
 gem "sidekiq"
+gem "sidekiq-cron"
+gem "bcrypt"    # password hashing
+gem "jwt"       # tokens
+gem "dotenv-rails"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

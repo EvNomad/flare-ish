@@ -35,6 +35,7 @@ module Providers
           .joins(:time_slot)
           .where(provider_id: provider.id, time_slot_id: @time_slot_id)
           .pluck(
+            "provider_time_slots.id",
             "provider_time_slots.time_slot_id",
             "provider_time_slots.state",
             "provider_time_slots.source",
@@ -46,10 +47,11 @@ module Providers
           .first
 
         if provider_time_slot_data
-          time_slot_id, state, source, local_date, local_time, start_utc, end_utc = provider_time_slot_data
+          id, time_slot_id, state, source, local_date, local_time, start_utc, end_utc = provider_time_slot_data
           {
             provider: provider,
             provider_time_slot: {
+              id: id,
               time_slot_id: time_slot_id,
               state: state,
               source: source,
