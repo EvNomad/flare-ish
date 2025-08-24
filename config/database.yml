@@ -81,9 +81,7 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: flare_ish_production
-    username: flare_ish
-    password: <%= ENV["FLARE_ISH_DATABASE_PASSWORD"] %>
+    url: <%= ENV["DATABASE_URL"] %>
   cache:
     <<: *primary_production
     database: flare_ish_production_cache
