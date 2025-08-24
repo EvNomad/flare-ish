@@ -146,7 +146,7 @@ The system is built around three core concepts:
 ### **Availability Calculation Flow**
 ```mermaid
 graph TD
-    A[External Event/Booking Change] --> B[Calendar::IngestEvent]
+    A[Booking Change/Reconciliation/External Event] --> B[Availability::FetchRange/Calendar::IngestEvent]
     B --> C[Availability::RecomputeDay]
     C --> D[Process Weekly Templates]
     D --> E[Apply External Blocks]
